@@ -12,8 +12,8 @@ MU = 0.05
 SIGMA = 0.2
 X0 = 100.0
 T = 1.0
-DT = 0.005  # Small enough for Milstein accuracy
-PATHS = 50_000 # High count for statistical significance
+DT = 0.005  
+PATHS = 50_000 
 SEED = 42
 
 # --- SCALAR GBM FUNCTIONS ---
@@ -27,31 +27,23 @@ def scalar_diff(t, x, args):
 
 @njit(fastmath=True)
 def scalar_diff_deriv(t, x, args):
-    # Must return an array matching x, because the system is 
-    # treated as a 1D Diagonal system, not a pure scalar.
     return np.full_like(x, args[1])
 
 # --- DIAGONAL GBM FUNCTIONS (2D Independent) ---
 @njit(fastmath=True)
 def diag_drift(t, x, args):
-    # args: (mu, sigma) broadcasted
     return args[0] * x
 
 @njit(fastmath=True)
 def diag_diff(t, x, args):
-    # Returns vector [sigma*x0, sigma*x1]
     return args[1] * x
 
 @njit(fastmath=True)
 def diag_diff_deriv(t, x, args):
-    # Returns vector [sigma, sigma]
-    # Important: Must return array for diagonal kernel!
     return np.full_like(x, args[1])
 
 # --- CORRELATED GBM FUNCTIONS (2D) ---
 CORR = 0.8
-# Cholesky of [[1, 0.8], [0.8, 1]] -> [[1, 0], [0.8, 0.6]]
-# Sigma matrix B such that B @ B.T = Covariance
 L_MAT = np.array([[1.0, 0.0], [0.8, 0.6]])
 
 @njit(fastmath=True)
@@ -60,15 +52,6 @@ def corr_drift(t, x, args):
 
 @njit(fastmath=True)
 def corr_diff(t, x, args):
-    # Returns Matrix (2,2). 
-    # Logic: diffusion term = sigma * x * dW_correlated
-    # We apply the correlation structure to the noise.
-    # To keep it simple: We return B (2x2) which multiplies dW (2x1).
-    # Effective volatility is args[1].
-    # We construct B = sigma * x * L_MAT (element-wise scaling of rows)
-    
-    # Row 0: sigma * x0 * [1.0, 0.0]
-    # Row 1: sigma * x1 * [0.8, 0.6]
     sigma = args[1]
     res = np.empty((2, 2))
     res[0, 0] = sigma * x[0] * L_MAT[0, 0]
@@ -87,10 +70,9 @@ def validate_gbm_stats(results, dims=1, label="Test"):
     exp_mean = X0 * np.exp(MU * T)
     exp_std = np.sqrt(X0**2 * np.exp(2*MU*T) * (np.exp(SIGMA**2 * T) - 1))
     
-    # Handle output shapes
-    if results.ndim == 3: # SAVE_ALL (Steps, Paths, Dims)
+    if results.ndim == 3: 
         final_vals = results[-1]
-    else: # SAVE_FINAL (Paths, Dims) or (Paths,)
+    else:
         final_vals = results
 
     # Check Mean
@@ -158,14 +140,13 @@ def test_correlated_kernels():
     sde = SDE(corr_drift, corr_diff, args=(MU, SIGMA))
     y0_vec = np.array([X0, X0])
     
-    # 1. Euler (Only one supported for correlated so far)
+    # 1. Euler 
     res = integrate(sde, y0_vec, (0, T), DT, method='euler_maruyama', n_paths=PATHS, seed=SEED)
     
     # Validate Moments
     validate_gbm_stats(res, dims=2, label="Correlated Euler")
     
     # Validate Correlation
-    # We check the correlation of the log-returns, which should match rho=0.8
     log_returns = np.log(res / X0)
     sim_corr = np.corrcoef(log_returns[:, 0], log_returns[:, 1])[0, 1]
     
@@ -208,7 +189,6 @@ def test_reproducibility():
     print("[PASS] Results are reproducible.")
 
 if __name__ == "__main__":
-    # Run all tests manually
     test_scalar_kernels()
     test_diagonal_kernels()
     test_correlated_kernels()

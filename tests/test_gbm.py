@@ -4,14 +4,12 @@ import pytest
 from numba import njit
 from pyito import SDE, integrate, Method
 
-# --- 1. Define the Physics (GBM) ---
-# dX = mu*X*dt + sigma*X*dW
 MU = 0.05
 SIGMA = 0.2
 X0 = 100.0
 T = 1.0
 DT = 0.001
-PATHS = 50_000  # Enough for statistical significance
+PATHS = 50_000  
 
 @njit(fastmath=True)
 def drift(t, x, args):
@@ -25,7 +23,6 @@ def diffusion(t, x, args):
 def diffusion_deriv(t, x, args):
     return np.array([args[1]])
 
-# Create SDE Object
 gbm_sde = SDE(
     drift, diffusion, diffusion_deriv, 
     args=(MU, SIGMA)
@@ -33,7 +30,6 @@ gbm_sde = SDE(
 
 def check_stats(results, tolerance_mean=0.5, tolerance_std=0.5):
     """Compare simulation stats vs Analytical Truth"""
-    # Analytical solutions
     expected_mean = X0 * np.exp(MU * T)
     expected_std = np.sqrt(X0**2 * np.exp(2*MU*T) * (np.exp(SIGMA**2 * T) - 1))
     
@@ -43,7 +39,6 @@ def check_stats(results, tolerance_mean=0.5, tolerance_std=0.5):
     print(f"  > Expected Mean: {expected_mean:.4f} | Sim Mean: {sim_mean:.4f}")
     print(f"  > Expected Std:  {expected_std:.4f} | Sim Std:  {sim_std:.4f}")
     
-    # Assertions
     assert np.abs(sim_mean - expected_mean) < tolerance_mean, "Mean diverged!"
     assert np.abs(sim_std - expected_std) < tolerance_std, "Volatility diverged!"
     print("  [PASS] Statistics match theory.\n")
@@ -64,7 +59,6 @@ def test_df_milstein():
     check_stats(res)
 
 if __name__ == "__main__":
-    # verify manually if pytest not installed
     test_euler_maruyama()
     test_milstein()
     test_df_milstein()

@@ -13,7 +13,7 @@ print("--- Simulating Ornstein-Uhlenbeck Process ---")
 THETA = 0.7
 MU = 1.5
 SIGMA = 0.3
-X0 = 0.0  # Start away from mean to show reversion
+X0 = 0.0  
 T_SPAN = (0.0, 5.0)
 DT = 0.01
 PATHS = 100
@@ -26,15 +26,11 @@ def ou_drift(t, x, args):
 @njit(fastmath=True)
 def ou_diffusion(t, x, args):
     theta, mu, sigma = args
-    # Scalar noise: returns float or array of same shape as x
     return np.full_like(x, sigma) 
 
-# Setup & Run
 ou_sde = SDE(ou_drift, ou_diffusion, args=(THETA, MU, SIGMA))
-# Use 'all' output policy to get full paths for plotting
 ou_results = integrate(ou_sde, X0, T_SPAN, DT, n_paths=PATHS, output='all', seed=42)
 
-# Plot
 t_grid = np.linspace(T_SPAN[0], T_SPAN[1], ou_results.shape[0])
 plt.figure(figsize=(10, 4))
 plt.plot(t_grid, ou_results[:, :10, 0], alpha=0.3, lw=1) # Plot first 10 paths
@@ -65,7 +61,6 @@ def cir_drift(t, x, args):
 @njit(fastmath=True)
 def cir_diffusion(t, x, args):
     a, b, sigma = args
-    # Safe sqrt: np.maximum ensures no NaN if x dips slightly negative due to discretization
     return sigma * np.sqrt(np.maximum(x, 0.0))
 
 cir_sde = SDE(cir_drift, cir_diffusion, args=(A, B, SIGMA_CIR))
@@ -113,16 +108,11 @@ def heston_drift(t, y, args):
 
 @njit(fastmath=True)
 def heston_diffusion(t, y, args):
-    # Must return Matrix B such that diffusion term = B @ dW_uncorrelated
     mu, kappa, theta, xi = args
     
     S = y[0]
-    v = np.maximum(y[1], 0.0) # Ensure variance is non-negative
+    v = np.maximum(y[1], 0.0) 
     sqrt_v = np.sqrt(v)
-    
-    # We construct the correlated diffusion matrix manually
-    # Row 1 (Price): sqrt(v) * S * [1, 0]  <-- dW_s is pure noise 1
-    # Row 2 (Vol):   xi * sqrt(v) * [rho, sqrt(1-rho^2)] <-- dW_v is mixed
     
     B = np.zeros((2, 2))
     

@@ -110,19 +110,15 @@ def euler_maruyama_correlated_final(drift_func, diffusion_func, args, y0, t0, dt
         y = y0.copy()
         t = t0
         
-        # Pre-allocate noise vector to avoid allocation inside loop
         dW_vec = np.empty(dims) 
         
         for _ in range(n_steps):
             a = drift_func(t, y, args)
-            B = diffusion_func(t, y, args) # Matrix output (dims, dims)
+            B = diffusion_func(t, y, args) 
             
-            # Generate independent Brownian motions
             for i in range(dims):
                 dW_vec[i] = np.random.normal(0.0, sqrt_dt)
                 
-            # y = y + a*dt + B @ dW
-            # Manual matrix multiplication for performance/numba clarity
             for i in range(dims):
                 diffusion_term = 0.0
                 for j in range(dims):
@@ -185,7 +181,6 @@ def milstein_scalar_final(drift_func, diffusion_func, diffusion_deriv_func, args
             b_prime = diffusion_deriv_func(t, y, args)
             
             dW = np.random.normal(0.0, sqrt_dt)
-            # FIX: correction is a scalar here, no [i] indexing needed
             correction = 0.5 * b * b_prime * (dW**2 - dt)
             
             for i in range(dims):
@@ -301,7 +296,6 @@ def df_milstein_scalar_final(drift_func, diffusion_func, args, y0, t0, dt, n_ste
             a = drift_func(t, y, args)
             b = diffusion_func(t, y, args)
             
-            # Scalar Approximation: Perturb all dims because b(y) is scalar
             for i in range(dims):
                 y_plus[i] = y[i] + epsilon
                 y_minus[i] = y[i] - epsilon
@@ -375,9 +369,8 @@ def df_milstein_diagonal_final(drift_func, diffusion_func, args, y0, t0, dt, n_s
         
         for _ in range(n_steps):
             a = drift_func(t, y, args)
-            b = diffusion_func(t, y, args) # Vector
+            b = diffusion_func(t, y, args) 
             
-            # Approximate diagonal derivative
             for i in range(dims):
                 y_plus[i] = y[i] + epsilon
                 y_minus[i] = y[i] - epsilon
@@ -388,7 +381,6 @@ def df_milstein_diagonal_final(drift_func, diffusion_func, args, y0, t0, dt, n_s
             for i in range(dims):
                 dW = np.random.normal(0.0, sqrt_dt)
                 
-                # Finite diff approx for db_i/dx_i (diagonal element)
                 b_prime_i = (b_plus[i] - b_minus[i]) * inv_2eps
                 
                 # Milstein correction

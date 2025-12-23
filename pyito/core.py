@@ -79,8 +79,6 @@ def integrate(
     if method_enum == Method.MILSTEIN and noise_type == NoiseType.CORRELATED:
         raise NotImplementedError("Milstein method with Correlated noise is not yet supported.")
 
-    # --- THE FIX IS HERE ---
-    # We changed != SCALAR to == CORRELATED to allow DIAGONAL noise.
     if method_enum == Method.DF_MILSTEIN and noise_type == NoiseType.CORRELATED:
          raise NotImplementedError("Derivative-Free Milstein does not support Correlated noise yet.")
     
@@ -102,7 +100,7 @@ def integrate(
             drift_compiled, diffusion_compiled, sde.args,
             y0_arr, t0, dt_validated, n_steps, n_paths, seed, epsilon
         )
-    else:  # Euler-Maruyama
+    else:  
         result = kernel(
             drift_compiled, diffusion_compiled, sde.args,
             y0_arr, t0, dt_validated, n_steps, n_paths, seed

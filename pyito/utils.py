@@ -46,7 +46,6 @@ def validate_dt(dt: float, t0: float, t1: float) -> Tuple[float, int]:
     if dt <= 0:
         raise ValueError(f"dt must be positive, got {dt}")
     
-    # FIX: Changed '>=' to '>' to allow single-step simulations
     if dt > (t1 - t0):
         raise ValueError(f"dt={dt} is too large for interval [{t0}, {t1}]")
     

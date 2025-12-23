@@ -105,10 +105,8 @@ def dispatch_kernel(method: str, noise_type: str, output_policy: str):
     """
     from . import kernels
     
-    # Build kernel name
     kernel_name = f"{method}_{noise_type}_{output_policy}"
     
-    # Get kernel from module
     try:
         kernel = getattr(kernels, kernel_name)
         return kernel
