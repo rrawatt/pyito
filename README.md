@@ -125,6 +125,22 @@ PyIto is optimized to saturate your CPU.
 
 ---
 
+## 📚 References & Mathematical Foundation
+
+`PyIto` implements algorithms established in the following primary sources:
+
+1.  **Kloeden, P. E., & Platen, E. (1992).** *Numerical Solution of Stochastic Differential Equations*. Springer-Verlag.
+
+2.  **Glasserman, P. (2003).** *Monte Carlo Methods in Financial Engineering*. Springer.
+
+3.  **Higham, D. J. (2001).** "An Algorithmic Introduction to Numerical Simulation of Stochastic Differential Equations." *SIAM Review*.
+
+4.  **Maruyama, G. (1955).** "Continuous Markov processes and stochastic equations." 
+
+5.  **Milstein, G. N. (1974).** "Approximate integration of stochastic differential equations."
+
+
+
 ## 🤝 Contributing
 
 Contributions are welcome!
